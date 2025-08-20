@@ -15,5 +15,9 @@ print(f"函数执行时间: {end_time - start_time:.1f} 秒")
 # print(decision)
 # print(f"函数执行时间: {end_time - start_time:.1f} 秒")
 
+# 回测一个时间范围
+# results = backtesting_range("Bitcoin", "2025-08-16", "2025-08-18", False, False)
+# print(results)
+
 # 回测2023年Bitcoin
 # decisions = backtesting_year("Bitcoin", 2023)

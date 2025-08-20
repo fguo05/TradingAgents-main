@@ -65,7 +65,7 @@ def backtesting_range(ticker:str, start_date:str, end_date:str, debug:bool=False
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-    if start_date > end_date or end_date > datetime.now().date():
+    if start_date > end_date or end_date > datetime.now():
         return False
 
     config = DEFAULT_CONFIG.copy()
