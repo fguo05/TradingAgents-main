@@ -37,6 +37,7 @@ class TradingAgentsGraph:
         selected_analysts=["market", "social", "news", "fundamentals"],
         debug=False,
         config: Dict[str, Any] = None,
+        log = True
     ):
         """Initialize the trading agents graph and components.
 
@@ -44,9 +45,11 @@ class TradingAgentsGraph:
             selected_analysts: List of analyst types to include
             debug: Whether to run in debug mode
             config: Configuration dictionary. If None, uses default config
+            log: Whether to log state to json file
         """
         self.debug = debug
         self.config = config or DEFAULT_CONFIG
+        self.log = log
 
         # Update the interface's config
         set_config(self.config)
@@ -69,7 +72,7 @@ class TradingAgentsGraph:
             self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
-        
+
         self.toolkit = Toolkit(config=self.config)
 
         # Initialize memories
@@ -125,7 +128,8 @@ class TradingAgentsGraph:
             "social": ToolNode(
                 [
                     # online tools
-                    self.toolkit.get_stock_news_openai,
+                    self.toolkit.get_social_media_openai,
+                    self.toolkit.sentiment_score,
                     # offline tools
                     self.toolkit.get_reddit_stock_info,
                 ]
@@ -135,6 +139,7 @@ class TradingAgentsGraph:
                     # online tools
                     self.toolkit.get_global_news_openai,
                     self.toolkit.get_google_news,
+                    self.toolkit.sentiment_score,
                     # offline tools
                     self.toolkit.get_finnhub_news,
                     self.toolkit.get_reddit_news,
@@ -154,13 +159,13 @@ class TradingAgentsGraph:
             ),
         }
 
-    def propagate(self, company_name, trade_date):
-        """Run the trading agents graph for a company on a specific date."""
+    def propagate(self, ticker:str, trade_date:str):
+        """Run the trading agents graph for a ticker on a specific date."""
 
-        self.ticker = company_name
+        self.ticker = ticker
 
         # Initialize state
-        init_agent_state = self.propagator.create_initial_state(company_name, trade_date) # dict
+        init_agent_state = self.propagator.create_initial_state(ticker, trade_date) # dict
         args = self.propagator.get_graph_args() # dict
 
         if self.debug:
@@ -182,7 +187,8 @@ class TradingAgentsGraph:
         self.curr_state = final_state
 
         # Log state
-        self._log_state(trade_date, final_state)
+        if self.log:
+            self._log_state(trade_date, final_state)
 
         # Return decision and processed signal
         return final_state, self.process_signal(final_state["final_trade_decision"])

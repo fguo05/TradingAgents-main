@@ -287,7 +287,7 @@ def get_google_news(
     query: Annotated[str, "Query to search with"],
     curr_date: Annotated[str, "Curr date in yyyy-mm-dd format"],
     look_back_days: Annotated[int, "how many days to look back"],
-) -> str:
+) -> list:
     query = query.replace(" ", "+")
 
     start_date = datetime.strptime(curr_date, "%Y-%m-%d")
@@ -295,19 +295,20 @@ def get_google_news(
     before = before.strftime("%Y-%m-%d")
 
     news_results = getNewsData(query, before, curr_date)
+    # print("Query:", query, "长度=", len(news_results), "Google news结果：", news_results)
+    # news_str = ""
 
-    news_str = ""
+    # for news in news_results:
+    #     news_str += (
+    #         f"### {news['title']} (source: {news['source']}) \n\n{news['snippet']}\n\n"
+    #     )
 
-    for news in news_results:
-        news_str += (
-            f"### {news['title']} (source: {news['source']}) \n\n{news['snippet']}\n\n"
-        )
+    # if len(news_results) == 0:
+    #     return ""
 
-    if len(news_results) == 0:
-        return ""
+    # return f"## {query} Google News, from {before} to {curr_date}:\n\n{news_str}"
 
-    return f"## {query} Google News, from {before} to {curr_date}:\n\n{news_str}"
-
+    return news_results[:100] # 前100条
 
 def get_reddit_global_news(
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
@@ -639,7 +640,7 @@ def get_YFin_data_online(
     ticker = yf.Ticker(symbol.upper())
 
     # Fetch historical data for the specified date range
-    data = ticker.history(start=start_date, end=end_date)
+    data = ticker.history(start=start_date, end=end_date, rounding=True)
 
     # Check if data is empty
     if data.empty:
@@ -703,7 +704,7 @@ def get_YFin_data(
     return filtered_data
 
 
-def get_stock_news_openai(ticker, curr_date):
+def get_social_media_openai(ticker, curr_date):
     config = get_config()
     client = OpenAI(base_url=config["backend_url"], api_key=OPENAI_API_KEY)
 
@@ -715,7 +716,43 @@ def get_stock_news_openai(ticker, curr_date):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": f"Can you search Social Media for {ticker} from 7 days before {curr_date} to {curr_date}? Make sure you only get the data posted during that period.",
+                        "text": f"""
+                            Act as a professional financial social media analyst. I need comprehensive information about discussions surrounding the ticker {ticker} across major social media platforms from {config["look_back_days"]} before {curr_date} to {curr_date}.
+                            Make sure not to include any information outside the period.
+    
+                            Please provide:
+                            1. Recent discussions from Twitter, Facebook, Reddit, StockTwits, Seeking Alpha, and other relevant platforms
+                            2. Analysis of bullish, bearish, and neutral sentiments
+                            3. Identification of key discussion topics and sentiment trends
+                            4. Notable influencers or high-engagement posts
+                            5. Relevant links to posts when available
+                            
+                            Format your response as follows:
+                            - Platform Name
+                              - Main discussion themes
+                              - Representative post summaries
+                              - Overall sentiment (Positive/Negative/Neutral)
+                              - Key influencers (if any)
+                            
+                            Focus particularly on:
+                            - Discussions triggered by company announcements or news
+                            - Conversations about unusual trading volume or price movements
+                            - Industry trend-related discussions
+                            - Retail investor sentiment
+                            
+                            For Twitter:
+                            - Include popular hashtags and retweet counts where possible
+                            - Note verified accounts discussing this ticker
+                            
+                            For Reddit:
+                            - Mention relevant subreddits (e.g., r/wallstreetbets, r/stocks)
+                            - Include upvote counts for significant posts
+                            
+                            For Facebook:
+                            - Identify popular groups discussing this stock
+                            - Note engagement metrics (likes, shares, comments)
+                            
+                            Provide concise but insightful analysis, highlighting any emerging patterns or unusual activity.""",
                     }
                 ],
             }
@@ -750,7 +787,7 @@ def get_global_news_openai(curr_date):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": f"Can you search global or macroeconomics news from 7 days before {curr_date} to {curr_date} that would be informative for trading purposes? Make sure you only get the data posted during that period.",
+                        "text": f"Can you search global or macroeconomics news from {config["look_back_days"]} days before {curr_date} to {curr_date} that would be informative for trading purposes? Make sure you only get the data posted during that period.",
                     }
                 ],
             }

@@ -73,22 +73,23 @@ def getNewsData(query, start_date, end_date):
 
             for el in results_on_page:
                 try:
-                    link = el.find("a")["href"]
+                    # link = el.find("a")["href"]
                     title = el.select_one("div.MBeuO").get_text()
                     snippet = el.select_one(".GI74Re").get_text()
-                    date = el.select_one(".LfVVr").get_text()
-                    source = el.select_one(".NUnG9d span").get_text()
-                    news_results.append(
-                        {
-                            "link": link,
-                            "title": title,
-                            "snippet": snippet,
-                            "date": date,
-                            "source": source,
-                        }
-                    )
+                    # date = el.select_one(".LfVVr").get_text()
+                    # source = el.select_one(".NUnG9d span").get_text()
+                    # news_results.append(
+                    #     {
+                    #         "link": link,
+                    #         "title": title,
+                    #         "snippet": snippet,
+                    #         "date": date,
+                    #         "source": source,
+                    #     }
+                    # )
+                    news_results.append(title+": "+snippet)
                 except Exception as e:
-                    print(f"Error processing result: {e}")
+                    # print(f"Error processing result: {e}")
                     # If one of the fields is not found, skip this result
                     continue
 

@@ -1,21 +1,19 @@
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-from tradingagents.default_config import DEFAULT_CONFIG
+from backtesting import *
 
-# Create a custom config
-config = DEFAULT_CONFIG.copy()
-# config["llm_provider"] = "google"  # Use a different model
-# config["backend_url"] = "https://generativelanguage.googleapis.com/v1"  # Use a different backend
-# config["deep_think_llm"] = "gemini-2.0-flash"  # Use a different model
-# config["quick_think_llm"] = "gemini-2.0-flash"  # Use a different model
-# config["max_debate_rounds"] = 1  # Increase debate rounds
-# config["online_tools"] = True  # Increase debate rounds
 
-# Initialize with custom config
-ta = TradingAgentsGraph(debug=True, config=config)
-
-# forward propagate
-_, decision = ta.propagate("NVDA", "2025-07-20")
+# 回测2025-08-18 Bitcoin——正常模式+不记录日志 376.5025s 429.9547s 359.5137s 316.6s 374.8s 390.2s
+start_time = time.time()
+decision = backtesting_one_day("Bitcoin", "2025-08-18", debug=False, log=False)
+end_time = time.time()
 print(decision)
+print(f"函数执行时间: {end_time - start_time:.1f} 秒")
 
-# Memorize mistakes and reflect
-# ta.reflect_and_remember(1000) # parameter is the position returns
+# 回测2025-08-18 Bitcoin——debug模式+记录日志 371.8s 349.5s 397.5s
+# start_time = time.time()
+# decision = backtesting_one_day("Bitcoin", "2025-08-18", debug=True, log=True)
+# end_time = time.time()
+# print(decision)
+# print(f"函数执行时间: {end_time - start_time:.1f} 秒")
+
+# 回测2023年Bitcoin
+# decisions = backtesting_year("Bitcoin", 2023)

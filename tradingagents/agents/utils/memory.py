@@ -1,7 +1,8 @@
 import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
-from tradingagents.default_config import OPENAI_API_KEY
+from tradingagents.default_config import *
+
 
 class FinancialSituationMemory:
     def __init__(self, name, config):
@@ -69,7 +70,7 @@ class FinancialSituationMemory:
 
 if __name__ == "__main__":
     # Example usage
-    matcher = FinancialSituationMemory()
+    matcher = FinancialSituationMemory('test_memory', DEFAULT_CONFIG)
 
     # Example data
     example_data = [

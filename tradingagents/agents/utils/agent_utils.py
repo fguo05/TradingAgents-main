@@ -13,6 +13,8 @@ from langchain_openai import ChatOpenAI
 import tradingagents.dataflows.interface as interface
 from tradingagents.default_config import DEFAULT_CONFIG
 from langchain_core.messages import HumanMessage
+from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import pipeline
 
 
 def create_msg_delete():
@@ -144,18 +146,17 @@ class Toolkit:
     @tool
     def get_YFin_data_online(
         symbol: Annotated[str, "ticker symbol of the company"],
-        start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
         end_date: Annotated[str, "End date in yyyy-mm-dd format"],
     ) -> str:
         """
         Retrieve the stock price data for a given ticker symbol from Yahoo Finance.
         Args:
             symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
-            start_date (str): Start date in yyyy-mm-dd format
             end_date (str): End date in yyyy-mm-dd format
         Returns:
             str: A formatted dataframe containing the stock price data for the specified ticker symbol in the specified date range.
         """
+        start_date = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=Toolkit._config["market_look_back_days"])).strftime("%Y-%m-%d")
 
         result_data = interface.get_YFin_data_online(symbol, start_date, end_date)
 
@@ -354,31 +355,31 @@ class Toolkit:
             curr_date (str): Current date in yyyy-mm-dd format
             look_back_days (int): How many days to look back
         Returns:
-            str: A formatted string containing the latest news from Google News based on the query and date range.
+            list: A list of formatted strings containing the latest news from Google News based on the query and date range.
         """
 
-        google_news_results = interface.get_google_news(query, curr_date, 7)
+        google_news_results = interface.get_google_news(query, curr_date, Toolkit._config["look_back_days"])
 
         return google_news_results
 
     @staticmethod
     @tool
-    def get_stock_news_openai(
+    def get_social_media_openai(
         ticker: Annotated[str, "the company's ticker"],
         curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
     ):
         """
-        Retrieve the latest news about a given stock by using OpenAI's news API.
+        Retrieve the latest social media about a given stock by using OpenAI's news API.
         Args:
             ticker (str): Ticker of a company. e.g. AAPL, TSM
             curr_date (str): Current date in yyyy-mm-dd format
         Returns:
-            str: A formatted string containing the latest news about the company on the given date.
+            str: A formatted string containing the latest social media about the company on the given date.
         """
 
-        openai_news_results = interface.get_stock_news_openai(ticker, curr_date)
-
-        return openai_news_results
+        openai_social_media_results = interface.get_social_media_openai(ticker, curr_date)
+        # print("Social_media信息:", openai_social_media_results, "social media结束")
+        return openai_social_media_results
 
     @staticmethod
     @tool
@@ -394,7 +395,7 @@ class Toolkit:
         """
 
         openai_news_results = interface.get_global_news_openai(curr_date)
-
+        # print("openai新闻结果：", openai_news_results, "\nopenai新闻结束")
         return openai_news_results
 
     @staticmethod
@@ -417,3 +418,28 @@ class Toolkit:
         )
 
         return openai_fundamentals_results
+
+    # 单例模式封装模型（进程内全局缓存）
+    @staticmethod
+    @functools.lru_cache(maxsize=None)  # 使用LRU缓存避免重复初始化
+    def get_sentiment_model():
+        return pipeline("sentiment-analysis", model=Toolkit._config["sentiment_analysis_model"])
+
+    @staticmethod
+    @tool
+    def sentiment_score(texts):
+        """
+        Conduct sentiment analysis and scoring on news articles or social media.
+        Args:
+            texts (list): List of news
+        Returns:
+            list: List of sentiment analysis results of news.
+        """
+        model = Toolkit.get_sentiment_model()
+        results = model([text[:512] for text in texts]) # 最大512（虽并非串最大长度512，为了便利取长度近似）
+        # print("======")
+        # print(len(texts))
+        # print(texts)
+        # print(results)
+        # print("======")
+        return results

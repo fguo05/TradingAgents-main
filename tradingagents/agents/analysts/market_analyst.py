@@ -1,6 +1,6 @@
+import pprint
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-import time
-import json
 
 
 def create_market_analyst(llm, toolkit):
@@ -8,7 +8,6 @@ def create_market_analyst(llm, toolkit):
     def market_analyst_node(state):
         current_date = state["trade_date"]
         ticker = state["company_of_interest"]
-        company_name = state["company_of_interest"]
 
         if toolkit.config["online_tools"]:
             tools = [
@@ -67,10 +66,12 @@ Volume-Based Indicators:
             ]
         )
 
-        prompt = prompt.partial(system_message=system_message)
-        prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
-        prompt = prompt.partial(current_date=current_date)
-        prompt = prompt.partial(ticker=ticker)
+        prompt = prompt.partial(
+            system_message=system_message,
+            tool_names=", ".join([tool.name for tool in tools]),
+            current_date=current_date,
+            ticker=ticker
+        )
 
         chain = prompt | llm.bind_tools(tools)
 
