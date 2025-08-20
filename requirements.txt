@@ -27,7 +27,7 @@ langchain-google-genai~=2.1.6
 
 typer~=0.16.0
 pydantic~=2.11.7
-transformers~=4.54.1
+transformers~=4.55.2
 langchain-anthropic~=0.3.17
 openai~=1.93.0
 langchain-core~=0.3.72
