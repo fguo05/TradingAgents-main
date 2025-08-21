@@ -76,10 +76,15 @@ def backtesting_range(ticker:str, start_date:str, end_date:str, debug:bool=False
 
     current_date = start_date
     while current_date <= end_date:
+        # start_time = time.time()
+
         _, decision = ta.propagate(ticker, current_date.strftime("%Y-%m-%d"))
         results.append(decision)
         # Memorize mistakes and reflect
-        # ta.reflect_and_remember(1000) # parameter is the position returns
+        ta.reflect_and_remember(1000) # parameter is the position returns
         current_date += timedelta(days=1)
+
+        # end_time = time.time()
+        # print(f"执行时间: {end_time - start_time:.1f} 秒")
 
     return results
