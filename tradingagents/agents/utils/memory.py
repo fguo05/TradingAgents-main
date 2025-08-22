@@ -11,8 +11,10 @@ class FinancialSituationMemory:
         else:
             self.embedding = "text-embedding-3-small"
         self.client = OpenAI(base_url=config["backend_url"], api_key=OPENAI_API_KEY)
-        self.chroma_client = chromadb.Client(Settings(allow_reset=True))
-        self.situation_collection = self.chroma_client.create_collection(name=name)
+        # self.chroma_client = chromadb.Client(Settings(allow_reset=True))
+        # self.situation_collection = self.chroma_client.create_collection(name=name)
+        self.chroma_client = chromadb.PersistentClient(path=f"./chroma_db_{name}")  # 也可以所有记忆用一个路径
+        self.situation_collection = self.chroma_client.get_or_create_collection(name=name)
 
     def get_embedding(self, text):
         """Get OpenAI embedding for a text"""
@@ -66,6 +68,15 @@ class FinancialSituationMemory:
             )
 
         return matched_results
+
+    def reset_memory(self):
+        """delete current collection and create a new one(e.g. bull_memory.reset_memory())"""
+        try:
+            self.chroma_client.delete_collection(self.situation_collection.name)
+        except Exception as e:
+            print(f"Failed to delete collection: {e}. Creating a new collection.")
+        finally:
+            self.situation_collection = self.chroma_client.create_collection(name=self.situation_collection.name)
 
 
 if __name__ == "__main__":

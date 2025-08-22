@@ -1,9 +1,7 @@
 # TradingAgents/graph/trading_graph.py
 
-import os
 from pathlib import Path
 import json
-from datetime import date
 from typing import Dict, Any, Tuple, List, Optional
 
 from langchain_openai import ChatOpenAI
@@ -15,11 +13,6 @@ from langgraph.prebuilt import ToolNode
 from tradingagents.agents import *
 from tradingagents.default_config import *
 from tradingagents.agents.utils.memory import FinancialSituationMemory
-from tradingagents.agents.utils.agent_states import (
-    AgentState,
-    InvestDebateState,
-    RiskDebateState,
-)
 from tradingagents.dataflows.interface import set_config
 
 from .conditional_logic import ConditionalLogic

@@ -25,7 +25,7 @@ Your goal is to deliver detailed insights into investment decisions and highligh
      - Technical indicators.
      - Technical signals.
      - Price movement analysis.
-     - Overall market data analysis 
+     - Overall market data analysis.
      - News analysis.
      - Social media and sentiment analysis.
      - Fundamental data analysis.
