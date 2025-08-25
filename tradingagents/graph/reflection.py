@@ -11,6 +11,7 @@ class Reflector:
         """Initialize the reflector with an LLM."""
         self.quick_thinking_llm = quick_thinking_llm
         self.reflection_system_prompt = self._get_reflection_prompt()
+        self.current_situation = ""
 
     def _get_reflection_prompt(self) -> str:
         """Get the system prompt for reflection."""
@@ -48,12 +49,17 @@ Adhere strictly to these instructions, and ensure your output is detailed, accur
 
     def _extract_current_situation(self, current_state: Dict[str, Any]) -> str:
         """Extract 4 Analysts' reports from the state."""
+        if self.current_situation:
+            return self.current_situation
+
         curr_market_report = current_state["market_report"]
         curr_sentiment_report = current_state["sentiment_report"]
         curr_news_report = current_state["news_report"]
         curr_fundamentals_report = current_state["fundamentals_report"]
 
-        return f"{curr_market_report}\n\n{curr_sentiment_report}\n\n{curr_news_report}\n\n{curr_fundamentals_report}"
+        self.current_situation = f"{curr_market_report}\n\n{curr_sentiment_report}\n\n{curr_news_report}\n\n{curr_fundamentals_report}"
+
+        return self.current_situation
 
     def _reflect_on_component(
         self, component_type: str, report: str, situation: str, returns_losses

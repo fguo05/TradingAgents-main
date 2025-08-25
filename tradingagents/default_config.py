@@ -4,7 +4,7 @@ import os
 DEFAULT_CONFIG = {
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
     "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", "./results"),
-    "data_dir": "/Users/yluo/Documents/Code/ScAI/FR1-data",
+    "data_dir": "/Users/tradingagents/Documents/Code/ScAI/FR1-data",
     "data_cache_dir": os.path.join(
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
         "dataflows/data_cache",
@@ -23,7 +23,8 @@ DEFAULT_CONFIG = {
     # Tool settings
     "online_tools": True,
     "look_back_days": 1, # 搜索几天内的新闻、社交媒体
-    "market_look_back_days": 14 # 搜索几天内的市场数据
+    "market_look_back_days": 14, # 搜索几天内的市场数据
+    "google_news_max_page": 6 # 搜索google新闻最大页数(每页10条新闻)
 }
 
 

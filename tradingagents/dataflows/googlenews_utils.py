@@ -1,9 +1,10 @@
-import json
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time
 import random
+
+from setuptools.command.setopt import config_file
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -11,6 +12,7 @@ from tenacity import (
     retry_if_exception_type,
     retry_if_result,
 )
+from tradingagents.default_config import DEFAULT_CONFIG
 
 
 def is_rate_limited(response):
@@ -31,7 +33,7 @@ def make_request(url, headers):
     return response
 
 
-def getNewsData(query, start_date, end_date):
+def get_news_data(query, start_date, end_date):
     """
     Scrape Google News search results for a given query and date range.
     query: str - search query
@@ -53,9 +55,12 @@ def getNewsData(query, start_date, end_date):
         )
     }
 
+    config = DEFAULT_CONFIG.copy()
+    max_page = config["google_news_max_page"]
+
     news_results = []
     page = 0
-    while True:
+    while page < max_page:
         offset = page * 10
         url = (
             f"https://www.google.com/search?q={query}"

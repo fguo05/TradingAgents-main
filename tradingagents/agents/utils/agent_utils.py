@@ -15,6 +15,7 @@ from tradingagents.default_config import DEFAULT_CONFIG
 from langchain_core.messages import HumanMessage
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import pipeline
+import time
 
 
 def create_msg_delete():
@@ -171,8 +172,7 @@ class Toolkit:
         ],
         curr_date: Annotated[
             str, "The current trading date you are trading on, YYYY-mm-dd"
-        ],
-        look_back_days: Annotated[int, "how many days to look back"] = 30,
+        ]
     ) -> str:
         """
         Retrieve stock stats indicators for a given ticker symbol and indicator.
@@ -180,13 +180,12 @@ class Toolkit:
             symbol (str): Ticker symbol of the company, e.g. AAPL, TSM
             indicator (str): Technical indicator to get the analysis and report of
             curr_date (str): The current trading date you are trading on, YYYY-mm-dd
-            look_back_days (int): How many days to look back, default is 30
         Returns:
             str: A formatted dataframe containing the stock stats indicators for the specified ticker symbol and indicator.
         """
 
         result_stockstats = interface.get_stock_stats_indicators_window(
-            symbol, indicator, curr_date, look_back_days, False
+            symbol, indicator, curr_date, Toolkit._config["market_look_back_days"], False
         )
 
         return result_stockstats
@@ -353,7 +352,6 @@ class Toolkit:
         Args:
             query (str): Query to search with
             curr_date (str): Current date in yyyy-mm-dd format
-            look_back_days (int): How many days to look back
         Returns:
             list: A list of formatted strings containing the latest news from Google News based on the query and date range.
         """
@@ -395,7 +393,7 @@ class Toolkit:
         """
 
         openai_news_results = interface.get_global_news_openai(curr_date)
-        # print("openai新闻结果：", openai_news_results, "\nopenai新闻结束")
+        # print("openai新闻结果：\n", openai_news_results, "\n全球新闻结束")
         return openai_news_results
 
     @staticmethod
@@ -437,9 +435,9 @@ class Toolkit:
         """
         model = Toolkit.get_sentiment_model()
         results = model([text[:512] for text in texts]) # 最大512（虽并非串最大长度512，为了便利取长度近似）
-        # print("======")
-        # print(len(texts))
-        # print(texts)
-        # print(results)
-        # print("======")
+        print("======")
+        print(len(texts))
+        print(texts)
+        print(results)
+        print("======")
         return results

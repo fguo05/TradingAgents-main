@@ -45,7 +45,7 @@ class StockstatsUtils:
             curr_date = pd.to_datetime(curr_date)
 
             end_date = today_date
-            start_date = today_date - pd.DateOffset(years=15)
+            start_date = today_date - pd.DateOffset(years=5) # 改成current_date前推look back days如何？
             start_date = start_date.strftime("%Y-%m-%d")
             end_date = end_date.strftime("%Y-%m-%d")
 

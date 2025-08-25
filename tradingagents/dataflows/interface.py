@@ -15,6 +15,8 @@ import yfinance as yf
 from openai import OpenAI
 from .config import get_config, set_config, DATA_DIR
 from tradingagents.default_config import OPENAI_API_KEY
+from datetime import datetime, timedelta
+import re
 
 
 def get_finnhub_news(
@@ -294,7 +296,7 @@ def get_google_news(
     before = start_date - relativedelta(days=look_back_days)
     before = before.strftime("%Y-%m-%d")
 
-    news_results = getNewsData(query, before, curr_date)
+    news_results = get_news_data(query, before, curr_date)
     # print("Query:", query, "长度=", len(news_results), "Google news结果：", news_results)
     # news_str = ""
 
@@ -308,7 +310,7 @@ def get_google_news(
 
     # return f"## {query} Google News, from {before} to {curr_date}:\n\n{news_str}"
 
-    return news_results[:100] # 前100条
+    return news_results
 
 def get_reddit_global_news(
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
@@ -566,9 +568,6 @@ def get_stockstats_indicator(
     online: Annotated[bool, "to fetch data online or offline"],
 ) -> str:
 
-    curr_date = datetime.strptime(curr_date, "%Y-%m-%d")
-    curr_date = curr_date.strftime("%Y-%m-%d")
-
     try:
         indicator_value = StockstatsUtils.get_stock_stats(
             symbol,
@@ -775,9 +774,53 @@ def get_social_media_openai(ticker, curr_date):
     return response.output[1].content[0].text
 
 
+def extract_news_items(news_text:str)->list:
+    """openai返回的新闻有多种形式：以-开头+以网址结尾、不以-开头+以网址结尾、以-开头+不以网址结尾"""
+
+    lines = news_text.split('\n')
+
+    news_items = []
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # 检查是否以网址结尾
+        is_url_end = re.search(r'\((\[[^]]*]\(https?://[^)]*\)|https?://[^)]*)\)$', line)
+        # 检查是否以-开头
+        is_dash_start = line.startswith('-')
+
+        if is_url_end or is_dash_start:
+            # 去除网址部分（如果有）
+            if is_url_end:
+                line = re.sub(r'\s*\((\[[^]]*]\(https?://[^)]*\)|https?://[^)]*)\)$', '', line)
+
+            # 去除开头的-（如果有）
+            if is_dash_start:
+                line = re.sub(r'^-\s*', '', line)
+
+            # 去除方括号
+            if line.startswith('[') and line.endswith(']'):
+                line = line[1:len(line)-1]
+
+            # 去除星号*
+            line = re.sub(r'\*', '', line)
+
+            if line and len(line) > 10:
+                news_items.append(line)
+
+    # 去重
+    return list(dict.fromkeys(news_items))
+
+
 def get_global_news_openai(curr_date):
     config = get_config()
     client = OpenAI(base_url=config["backend_url"], api_key=OPENAI_API_KEY)
+
+    curr_date_obj = datetime.strptime(curr_date, '%Y-%m-%d')
+    start_date_obj = curr_date_obj - timedelta(days=config["look_back_days"])
+    start_date = start_date_obj.strftime('%Y-%m-%d')
 
     response = client.responses.create(
         model=config["quick_think_llm"],
@@ -787,7 +830,7 @@ def get_global_news_openai(curr_date):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": f"Can you search global or macroeconomics news from {config["look_back_days"]} days before {curr_date} to {curr_date} that would be informative for trading purposes? Make sure you only get the data posted during that period.",
+                        "text": f"Can you search global or macroeconomics news from {start_date} to {curr_date} that would be informative for trading purposes? Make sure you only get the data posted during that period. Don't include the links where you get the news in the text result.",
                     }
                 ],
             }
@@ -807,7 +850,9 @@ def get_global_news_openai(curr_date):
         store=True,
     )
 
-    return response.output[1].content[0].text
+    text_response = response.output[1].content[0].text
+
+    return extract_news_items(text_response)
 
 
 def get_fundamentals_openai(ticker, curr_date):
@@ -841,5 +886,5 @@ def get_fundamentals_openai(ticker, curr_date):
         top_p=1,
         store=True,
     )
-
+    print("全球新闻结果：", response)
     return response.output[1].content[0].text

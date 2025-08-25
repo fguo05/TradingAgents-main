@@ -30,7 +30,7 @@ def create_news_analyst(llm, toolkit):
                     " prefix your response with FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** so the team knows to stop."
                     " You have access to the following tools: {tool_names}."
                     " Use the provided tool to conduct sentiment analysis on EVERY patch of news returned from EACH news-fetching tool call, NO MATTER how long the list of news is."
-                    " Conduct sentiment analysis on 50 news pieces at least. If there are too many, it's ok, I can wait. Process as many as possible"
+                    " Conduct sentiment analysis on 50 news pieces at least!"
                     " Note that the provided sentiment analysis function only takes list of str as argument.\n{system_message}"
                     "For your reference, the current date is {current_date}.",
                 ),
